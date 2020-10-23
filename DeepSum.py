@@ -31,6 +31,7 @@ seed_everything(seed=args.seed)
 logging.basicConfig(
     filename=f"logs/{args.run_name}.log", level=logging.INFO, format="%(message)s",
 )
+device = torch.device("cuda")
 
 
 class VideoDataset(data.Dataset):
@@ -176,7 +177,11 @@ for fold in range(5):
     train_paths = dataset["train"]
     val_paths = dataset["val"]
     agent = REINFORCE(
-        train_paths=train_paths, val_paths=val_paths, args=args, fold=fold,
+        train_paths=train_paths,
+        val_paths=val_paths,
+        args=args,
+        fold=fold,
+        device=device,
     )
     logging.info(f"Fold: {fold}")
     print(f"Fold: {fold}")
