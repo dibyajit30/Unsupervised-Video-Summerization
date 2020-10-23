@@ -1,2 +1,3 @@
 # Unsupervised-Video-Summarization
-Video summarization through deep reinforcement learning 
+
+Video summarization through deep reinforcement learning
