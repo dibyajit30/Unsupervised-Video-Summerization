@@ -1,0 +1,80 @@
+import numpy as np
+import pandas as pd
+
+import torch
+from torch.utils import data
+
+from utils import AverageMeter, seed_everything, get_filename
+from PolicyGradient import REINFORCE
+from dataset import VideoDataset
+
+from tqdm.auto import tqdm
+
+import glob
+import os
+import argparse
+import json
+
+
+parser = argparse.ArgumentParser(description="Video summarization through Deep RL")
+parser.add_argument(
+    "--run_name", default="", type=str, required=True, help="name to identify exp",
+)
+parser.add_argument(
+    "--epochs", default=60, type=int, help="number of epochs",
+)
+parser.add_argument(
+    "--num_episodes", default=5, type=int, help="number of episodes",
+)
+parser.add_argument(
+    "--seed", default=1, type=int, required=True, help="seed",
+)
+args = parser.parse_args()
+
+seed_everything(seed=args.seed)
+
+device = torch.device("cuda")
+
+
+def load_dataloader(train_paths, val_paths):
+    train_dataset = VideoDataset(train_paths)
+    val_dataset = VideoDataset(val_paths)
+
+    train_dataloader = data.DataLoader(
+        train_dataset, batch_size=1, shuffle=True, num_workers=4, pin_memory=True
+    )
+    val_dataloader = data.DataLoader(
+        val_dataset, batch_size=1, shuffle=False, num_workers=4, pin_memory=True
+    )
+
+    return train_dataloader, val_dataloader
+
+
+def load_baselines(train_paths):
+    baselines = {}
+    for path in train_paths:
+        id = get_filename(path)
+        baselines[id] = 0.0
+    return baselines
+
+
+for fold in range(5):
+    print("Fold::", fold)
+    f = open(f"folds/fold_{fold}.json")
+    dataset = json.load(f)
+    f.close()
+    train_paths = dataset["train"]
+    val_paths = dataset["val"]
+    train_dataloader, val_dataloader = load_dataloader(train_paths, val_paths)
+    baselines = load_baselines(train_paths)
+    agent = REINFORCE(
+        train_dataloader=train_dataloader,
+        val_dataloader=val_dataloader,
+        baselines=baselines,
+        args=args,
+        fold=fold,
+        device=device,
+    )
+    agent.learn(args.epochs, args.num_episodes)
+    print("--------------------------------------")
+
