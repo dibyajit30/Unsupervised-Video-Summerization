@@ -9,9 +9,10 @@ import numpy as np
 
 
 class VideoDataset(data.Dataset):
-    def __init__(self, paths):
+    def __init__(self, paths, cnn_feat="resnet50"):
         super().__init__()
         self.paths = paths
+        self.cnn_feat = cnn_feat
         self.df = pd.read_csv(
             "ydata-tvsum50-anno.tsv",
             sep="\t",
@@ -62,23 +63,43 @@ class VideoDataset(data.Dataset):
             )
         )
 
+        self.user_summary = dict(
+            zip(
+                list(self.dataset.keys()),
+                [
+                    self.dataset[key]["user_summary"][...]
+                    for key in list(self.dataset.keys())
+                ],
+            )
+        )
+
+        self.n_frames = dict(
+            zip(
+                list(self.dataset.keys()),
+                [
+                    self.dataset[key]["n_frames"][()]
+                    for key in list(self.dataset.keys())
+                ],
+            )
+        )
+
     def __getitem__(self, i):
         path = self.paths[i]
         id = get_filename(path)
-        df = self.df[self.df.id == id].scores.apply(
-            lambda x: list(map(lambda y: float(y), x.split(",")))
-        )
 
-        user_summary = np.asarray(df.values.tolist())
         key = self.id_key_map[id]
+        user_summary = self.user_summary[key]
         change_points = self.change_points[key]
         nfps = self.nfps[key]
         picks = torch.LongTensor(self.picks[key])
-        feature = self.features[key]
-        n_frames = feature.shape[0]
+        n_frames = self.n_frames[key]
 
-        # feature = torch.load(path)
-        # feature = feature[picks, :]
+        if self.cnn_feat == "resnet50":
+            feature = torch.load(path)
+            feature = feature[picks, :]
+        else:
+            feature = self.features[key]
+
         return {
             "feature": feature,
             "user_summary": user_summary,

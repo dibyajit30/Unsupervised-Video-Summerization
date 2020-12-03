@@ -18,7 +18,7 @@ from tqdm.auto import tqdm
 
 
 class PolicyNet(nn.Module):
-    def __init__(self, in_dim=1024, hid_dim=256, num_layers=1, dropout=0.0):
+    def __init__(self, in_dim, hid_dim=256, num_layers=1, dropout=0.0):
         super().__init__()
         self.rnn = nn.LSTM(
             input_size=in_dim,
@@ -43,15 +43,20 @@ class REINFORCE:
         val_dataloader,
         args,
         fold,
+        cnn_feat="resnet50",
         baselines=None,
         gamma=0.99,
         beta=0.01,
-        lr=0.001,
+        lr=1e-5,
         device="cpu",
     ):
-        self.policy = PolicyNet()
+        if cnn_feat == "resnet50":
+            self.policy = PolicyNet(in_dim=2048)
+        else:
+            self.policy = PolicyNet(in_dim=1024)
+
         self.policy.to(device)
-        self.optimizer = torch.optim.AdamW(self.policy.parameters(), lr=lr)
+        self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=lr)
 
         self.baselines = baselines
 
@@ -83,6 +88,7 @@ class REINFORCE:
         print("Checkpoint loaded")
 
     def evaluate_policy(self, dataloader=None, log=False):
+        self.policy.eval()
 
         if not dataloader:
             dataloader = self.val_dataloader
@@ -127,6 +133,7 @@ class REINFORCE:
         logging.info(f"Fold: {self.fold}")
 
         best_eval_score = -float("inf")
+        self.policy.train()
 
         for epoch in range(epochs):
             losses = AverageMeter()
@@ -144,14 +151,13 @@ class REINFORCE:
                 for _ in range(num_episodes):
                     actions = distr.sample()
                     log_probs = distr.log_prob(actions)
-                    reward = compute_reward(
-                        feature, actions, use_gpu=True, temp_dist_thre=40
-                    )
+                    reward = compute_reward(feature, actions, use_gpu=True)
                     loss = loss - log_probs.mean() * (reward - self.baselines[id])
                     rewards.update(reward.item())
 
                 self.optimizer.zero_grad()
                 loss.backward()
+                nn.utils.clip_grad_norm_(self.policy.parameters(), 5.0)
                 self.optimizer.step()
                 self.baselines[id] = 0.9 * self.baselines[id] + 0.1 * rewards.avg
 
@@ -167,6 +173,8 @@ class REINFORCE:
                 eval_metric = self.evaluate_policy()
                 if eval_metric > best_eval_score:
                     best_eval_score = eval_metric
+
+                self.policy.train()
 
             self.save_policy()
 

@@ -1,6 +1,7 @@
 submission/
 SumMe/
 tvsum/
+*.png
 *.ipynb
 *.tgz
 *.zip
