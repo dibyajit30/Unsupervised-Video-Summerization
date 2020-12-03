@@ -87,7 +87,6 @@ class REINFORCE:
         if not dataloader:
             dataloader = self.val_dataloader
 
-        losses = AverageMeter()
         f_scores = AverageMeter()
         pbar = tqdm(dataloader, desc=f"Evaluation")
 
@@ -103,11 +102,7 @@ class REINFORCE:
 
             with torch.no_grad():
                 probs = self.policy(feature).squeeze()
-
-            loss = -self.beta * (probs.mean() - 0.5) ** 2
-            losses.update(loss.item())
-
-            probs = probs.cpu().numpy()
+                probs = probs.cpu().numpy()
 
             summary = generate_summary(probs, change_points, n_frames, nfps, picks)
             metric, _, _ = evaluate_summary(summary, user_summary)
@@ -115,7 +110,7 @@ class REINFORCE:
             score_dict[id] = metric
             f_scores.update(metric)
 
-            pbar.set_postfix(loss=losses.avg, f_score=f_scores.avg)
+            pbar.set_postfix(f_score=f_scores.avg)
 
         if log:
             if not os.path.exists(f"evaluation_logs/{self.args.run_name}"):
@@ -126,15 +121,12 @@ class REINFORCE:
                 index=False,
             )
 
+        return f_scores.avg
+
     def learn(self, epochs, num_episodes):
-
-        logging.basicConfig(
-            filename=f"logs/{self.args.run_name}.log",
-            level=logging.INFO,
-            format="%(message)s",
-        )
-
         logging.info(f"Fold: {self.fold}")
+
+        best_eval_score = -float("inf")
 
         for epoch in range(epochs):
             losses = AverageMeter()
@@ -145,7 +137,7 @@ class REINFORCE:
                 id = batch_data["id"][0]
                 probs = self.policy(feature)
 
-                loss = -self.beta * (probs.mean() - 0.5) ** 2
+                loss = self.beta * (probs.mean() - 0.5) ** 2
                 distr = Bernoulli(probs)
                 rewards = AverageMeter()
 
@@ -172,8 +164,15 @@ class REINFORCE:
                 )
 
             if epoch % 5 == 0:
-                self.evaluate_policy()
+                eval_metric = self.evaluate_policy()
+                if eval_metric > best_eval_score:
+                    best_eval_score = eval_metric
 
             self.save_policy()
 
         logging.info("--------------------------------------")
+        logging.info(f"Best eval score: {best_eval_score}")
+        print("Best eval score:", best_eval_score)
+        logging.info("--------------------------------------")
+
+        return best_eval_score

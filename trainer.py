@@ -14,6 +14,7 @@ import glob
 import os
 import argparse
 import json
+import logging
 
 
 parser = argparse.ArgumentParser(description="Video summarization through Deep RL")
@@ -58,6 +59,11 @@ def load_baselines(train_paths):
     return baselines
 
 
+logging.basicConfig(
+    filename=f"logs/{args.run_name}.log", level=logging.INFO, format="%(message)s",
+)
+
+fold_scores = []
 for fold in range(5):
     print("Fold::", fold)
     f = open(f"folds/fold_{fold}.json")
@@ -75,6 +81,9 @@ for fold in range(5):
         fold=fold,
         device=device,
     )
-    agent.learn(args.epochs, args.num_episodes)
+    best_eval_score = agent.learn(args.epochs, args.num_episodes)
+    fold_scores.append(best_eval_score)
     print("--------------------------------------")
 
+print("Avg OOF score:", np.mean(fold_scores))
+logging.info(f"Avg OOF score: {np.mean(fold_scores)}")

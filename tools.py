@@ -170,7 +170,6 @@ def evaluate_summary(machine_summary, user_summary, eval_metric="avg"):
             f_score = 0.0
         else:
             f_score = (2 * precision * recall) / (precision + recall)
-        f_score *= 100
         f_scores.append(f_score)
         prec_arr.append(precision)
         rec_arr.append(recall)

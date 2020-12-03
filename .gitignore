@@ -3,5 +3,6 @@ SumMe/
 tvsum/
 *.ipynb
 *.tgz
+*.zip
 __pycache__/
 preprocessed/
