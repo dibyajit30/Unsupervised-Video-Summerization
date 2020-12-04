@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Bernoulli
+import torchvision
 
 from utils import AverageMeter, seed_everything, get_filename
 from reward import compute_reward
@@ -18,8 +19,20 @@ from tqdm.auto import tqdm
 
 
 class PolicyNet(nn.Module):
-    def __init__(self, in_dim, hid_dim=256, num_layers=1, dropout=0.0):
+    def __init__(self, args, hid_dim=256, num_layers=1, dropout=0.0):
         super().__init__()
+        self.args = args
+        if args.cnn_feat == "resnet50":
+            in_dim = 2048
+        else:
+            in_dim = 1024
+
+        if args.train_cnn:
+            self.resnet = torchvision.models.mobilenet_v2(pretrained=True)
+            modules = list(self.resnet.children())[:-1]
+            self.resnet = nn.Sequential(*modules)
+            in_dim = 1280
+
         self.rnn = nn.LSTM(
             input_size=in_dim,
             hidden_size=hid_dim,
@@ -28,12 +41,20 @@ class PolicyNet(nn.Module):
             bidirectional=True,
             batch_first=True,
         )
+
         self.head = nn.Linear(hid_dim * 2, 1)
 
     def forward(self, x):
+        feature = x.clone()
+        if self.args.train_cnn:
+            x = self.resnet(x)
+            x = x.mean((2, 3))
+            feature = x.detach().clone()
+            x = x.unsqueeze(0)
+
         h, _ = self.rnn(x)
         out = torch.sigmoid(self.head(h))
-        return out
+        return out, feature
 
 
 class REINFORCE:
@@ -43,17 +64,13 @@ class REINFORCE:
         val_dataloader,
         args,
         fold,
-        cnn_feat="resnet50",
         baselines=None,
         gamma=0.99,
         beta=0.01,
         lr=1e-5,
         device="cpu",
     ):
-        if cnn_feat == "resnet50":
-            self.policy = PolicyNet(in_dim=2048)
-        else:
-            self.policy = PolicyNet(in_dim=1024)
+        self.policy = PolicyNet(args=args)
 
         self.policy.to(device)
         self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=lr)
@@ -99,6 +116,8 @@ class REINFORCE:
         score_dict = {}
         for batch_data in pbar:
             feature = batch_data["feature"].to(self.device)
+            if self.args.train_cnn:
+                feature = feature.squeeze(0)
             user_summary = batch_data["user_summary"].squeeze().numpy()
             change_points = batch_data["change_points"].squeeze().numpy()
             nfps = batch_data["nfps"].squeeze().numpy().tolist()
@@ -107,7 +126,8 @@ class REINFORCE:
             id = batch_data["id"][0]
 
             with torch.no_grad():
-                probs = self.policy(feature).squeeze()
+                probs, _ = self.policy(feature)
+                probs = probs.squeeze()
                 probs = probs.cpu().numpy()
 
             summary = generate_summary(probs, change_points, n_frames, nfps, picks)
@@ -141,8 +161,10 @@ class REINFORCE:
             pbar = tqdm(self.train_dataloader, desc=f"Epoch {epoch+1}/{epochs}")
             for idx, batch_data in enumerate(pbar):
                 feature = batch_data["feature"].to(self.device)
+                if self.args.train_cnn:
+                    feature = feature.squeeze(0)
                 id = batch_data["id"][0]
-                probs = self.policy(feature)
+                probs, feature = self.policy(feature)
 
                 loss = self.beta * (probs.mean() - 0.5) ** 2
                 distr = Bernoulli(probs)

@@ -6,7 +6,7 @@ from torch.utils import data
 
 from utils import AverageMeter, seed_everything, get_filename
 from PolicyGradient import REINFORCE
-from dataset import VideoDataset
+from dataset import VideoDataset, LstmDataset
 
 from tqdm.auto import tqdm
 
@@ -28,6 +28,9 @@ parser.add_argument(
     help="CNN feature extractor to use [resnet50 or resnet101]",
 )
 parser.add_argument(
+    "--train_cnn", action="store_true", help="Train the CNN backbone [resnet50]",
+)
+parser.add_argument(
     "--epochs", default=60, type=int, help="number of epochs",
 )
 parser.add_argument(
@@ -44,8 +47,12 @@ device = torch.device("cuda")
 
 
 def load_dataloader(args, train_paths, val_paths):
-    train_dataset = VideoDataset(train_paths, args.cnn_feat)
-    val_dataset = VideoDataset(val_paths, args.cnn_feat)
+    if args.train_cnn:
+        train_dataset = VideoDataset(train_paths)
+        val_dataset = VideoDataset(val_paths)
+    else:
+        train_dataset = LstmDataset(train_paths, args.cnn_feat)
+        val_dataset = LstmDataset(val_paths, args.cnn_feat)
 
     train_dataloader = data.DataLoader(
         train_dataset, batch_size=1, shuffle=True, num_workers=4, pin_memory=True
@@ -82,7 +89,6 @@ for fold in range(5):
     agent = REINFORCE(
         train_dataloader=train_dataloader,
         val_dataloader=val_dataloader,
-        cnn_feat=args.cnn_feat,
         baselines=baselines,
         args=args,
         fold=fold,
