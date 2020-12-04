@@ -7,6 +7,8 @@ import torch.nn.functional as F
 from torch.distributions import Bernoulli
 import torchvision
 
+import transformers
+
 from utils import AverageMeter, seed_everything, get_filename
 from reward import compute_reward
 from tools import generate_summary, evaluate_summary
@@ -57,6 +59,54 @@ class PolicyNet(nn.Module):
         return out, feature
 
 
+class Transformer(nn.Module):
+    def __init__(self, config, device):
+        super().__init__()
+        self.device = device
+        self.positional_embedding = nn.Embedding(
+            config.max_position_embeddings, config.hidden_size
+        )
+        self.LayerNorm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        self.start_token = 0
+        self.end_token = 1
+
+        self.layers = nn.ModuleList(
+            [transformers.BertLayer(config) for _ in range(config.num_hidden_layers)]
+        )
+
+        self.head = nn.Linear(config.hidden_size, 1)
+
+    def forward(self, x):
+        feature = x.clone()
+        seq_len = x.size(1) + 2
+        batch_size = x.size(0)
+
+        start_embed = self.positional_embedding(
+            torch.LongTensor([self.start_token]).to(self.device)
+        )
+        start_embed = start_embed.unsqueeze(0).repeat(batch_size, 1, 1)
+        end_embed = self.positional_embedding(
+            torch.LongTensor([self.end_token]).to(self.device)
+        )
+        end_embed = end_embed.unsqueeze(0).repeat(batch_size, 1, 1)
+
+        sequence = torch.arange(seq_len).expand(1, -1).to(self.device)
+        pos_emded = self.positional_embedding(sequence)
+        x = torch.cat((start_embed, x, end_embed), dim=1)
+        x = x + pos_emded
+        x = self.LayerNorm(x)
+        x = self.dropout(x)
+
+        for layer in self.layers:
+            x = layer(x)
+            x = x[0]
+
+        x = x[:, 1:-1, :]
+        x = torch.sigmoid(self.head(x))
+        return x, feature
+
+
 class REINFORCE:
     def __init__(
         self,
@@ -70,7 +120,15 @@ class REINFORCE:
         lr=1e-5,
         device="cpu",
     ):
-        self.policy = PolicyNet(args=args)
+        if args.decoder == "lstm":
+            self.policy = PolicyNet(args=args)
+        else:
+            config = transformers.BertConfig()
+            config.hidden_size = 2048
+            config.num_attention_heads = 8
+            config.num_hidden_layers = 4
+            config.max_position_embeddings = 1500
+            self.policy = Transformer(config, device)
 
         self.policy.to(device)
         self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=lr)

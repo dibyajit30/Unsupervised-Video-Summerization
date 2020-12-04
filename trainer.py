@@ -28,6 +28,12 @@ parser.add_argument(
     help="CNN feature extractor to use [resnet50 or resnet101]",
 )
 parser.add_argument(
+    "--decoder",
+    default="lstm",
+    type=str,
+    help="Decoder model to use [lstm or transformer]",
+)
+parser.add_argument(
     "--train_cnn", action="store_true", help="Train the CNN backbone [resnet50]",
 )
 parser.add_argument(
