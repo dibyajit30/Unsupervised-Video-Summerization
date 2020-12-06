@@ -164,9 +164,9 @@ class REINFORCE:
         
     def augment_picks(self, n_frames):
         picks_set = []
-        picks_set.append(np.array([i for i in range(0, n_frames, 10)]))
         picks_set.append(np.array([i for i in range(0, n_frames, 15)]))
-        picks_set.append(np.array([i for i in range(0, n_frames, 20)]))
+        picks_set.append(np.array([i for i in range(5, n_frames, 15)]))
+        picks_set.append(np.array([i for i in range(10, n_frames, 15)]))
         return picks_set
 
     def evaluate_policy(self, dataloader=None, log=False):
