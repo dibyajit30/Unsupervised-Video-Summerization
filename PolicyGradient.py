@@ -161,6 +161,13 @@ class REINFORCE:
         self.policy.load_state_dict(ckpt["model"])
         self.optimizer.load_state_dict(ckpt["optimizer"])
         print("Checkpoint loaded")
+        
+    def augment_picks(self, n_frames):
+        picks_set = []
+        picks_set.append([i for i in range(0, n_frames, 10)])
+        picks_set.append([i for i in range(0, n_frames, 15)])
+        picks_set.append([i for i in range(0, n_frames, 20)])
+        return picks_set
 
     def evaluate_policy(self, dataloader=None, log=False):
         self.policy.eval()
@@ -179,8 +186,9 @@ class REINFORCE:
             user_summary = batch_data["user_summary"].squeeze().numpy()
             change_points = batch_data["change_points"].squeeze().numpy()
             nfps = batch_data["nfps"].squeeze().numpy().tolist()
-            picks = batch_data["picks"].squeeze().numpy()
+            #picks = batch_data["picks"].squeeze().numpy()
             n_frames = batch_data["n_frames"].squeeze().item()
+            picks_set = self.augment_picks(n_frames)
             id = batch_data["id"][0]
 
             with torch.no_grad():
@@ -188,11 +196,16 @@ class REINFORCE:
                 probs = probs.squeeze()
                 probs = probs.cpu().numpy()
 
-            summary = generate_summary(probs, change_points, n_frames, nfps, picks)
-            metric, _, _ = evaluate_summary(summary, user_summary)
+            avg_metric = 0
+            n_picks = len(picks_set)
+            for picks in picks_set:
+                summary = generate_summary(probs, change_points, n_frames, nfps, picks)
+                metric, _, _ = evaluate_summary(summary, user_summary)
+                avg_metric += metric
+            avg_metric /= n_picks
 
-            score_dict[id] = metric
-            f_scores.update(metric)
+            score_dict[id] = avg_metric
+            f_scores.update(avg_metric)
 
             pbar.set_postfix(f_score=f_scores.avg)
 
