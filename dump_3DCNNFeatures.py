@@ -37,12 +37,12 @@ errors = []
 batch_size = 32
 for i, file in enumerate(files):
     prefix = file.split("/")[-1].split(".")[0]
-    save_path = f"cnn_feats/vid.pt"
+    save_path = f"cnn_feats/{prefix}.pt"
     if os.path.exists(save_path):
         continue
     try:
         images = np.load(file)
-        images = torch.Tensor(images)
+        images = torch.Tensor(images).to(device)
         
     except:
         errors.append(file)
