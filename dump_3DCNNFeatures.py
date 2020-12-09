@@ -34,28 +34,45 @@ resnet.eval()
 
 files = glob.glob("videos_npy/*.npy")
 errors = []
+batch_size = 32
 for i, file in enumerate(files):
     prefix = file.split("/")[-1].split(".")[0]
-    save_path = f"cnn_feats/{prefix}.pt"
+    save_path = f"cnn_feats/vid.pt"
     if os.path.exists(save_path):
         continue
     try:
         images = np.load(file)
         images = torch.Tensor(images)
-        images = preprocess(images)
-        images = images.unsqueeze(0)
+        
     except:
         errors.append(file)
         continue
+    features = []
+    inputs = []
+
+    for image in tqdm(images, desc=f"Video {i+1}/{len(files)}"):
+        inputs.append(image)
+        if len(inputs) % batch_size == 0:
+            inputs = torch.stack(inputs, 0)
+            inputs = preprocess(inputs)    
+            inputs = inputs.unsqueeze(0)
+            with torch.no_grad():
+                feat = resnet(inputs)
+            features.append(feat.cpu())
+            inputs = []
+
+    if len(inputs) > 0:
+        inputs = torch.stack(inputs, 0)
+        inputs = preprocess(inputs)    
+        inputs = inputs.unsqueeze(0)
+        with torch.no_grad():
+            feat = resnet(inputs)
+        features.append(feat.cpu())
     
-    features = resnet(images)
-    
-    
-    features = features.view(-1, 512)
+    features = torch.stack(features, 0)
     torch.save(features.cpu(), save_path)
     del features
     gc.collect()
 
 print("Errors")
 print(errors)
-
