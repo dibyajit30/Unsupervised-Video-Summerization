@@ -35,7 +35,7 @@ class PolicyNet(nn.Module):
             self.resnet = nn.Sequential(*modules)
             in_dim = 1280
 
-        self.rnn = nn.LSTM(
+        self.rnn = nn.GRU(
             input_size=in_dim,
             hidden_size=hid_dim,
             num_layers=num_layers,
