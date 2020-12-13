@@ -1,0 +1,61 @@
+body{
+    /*background: #2c041c;*/
+}
+.text.title{
+    color: #e80a2f;
+    font-size: 5.5rem;
+    font-weight: 800;
+    font-family: fantasy;
+    padding-top: 50px;
+    margin-left: 17%;
+}
+.icon img{
+    height: 180px;
+    width: 200px;
+}
+.main-menu{
+    background: #e85b0a;
+    color: #ffffff;
+    height: 50px;
+    position: relative;
+    font-size: 2.5em;
+    text-align: center;
+}
+section.main-section{
+    display: inline-block;
+    width: 100%;
+}
+.main-menu .clickable:focus,.main-menu .clickable:hover{
+    background: #ccff00;
+}
+.sub-menu{
+    height: 30px;
+    background: #000000;
+    opacity: 0.8;
+    font-size: 1.5em;
+    text-align: center;
+    color: #ffffff;
+}
+.sub-menu .clickable:focus,.sub-menu .clickable:hover{
+    color: aqua;
+    opacity: 1.0;
+}
+.picture{
+    padding-left: 50px!important;
+    padding-top: 75px;
+}
+.picture .image{
+    max-height: 350px;
+    max-width: 300px;
+}
+.details .text{
+    padding-left: 35px;
+    padding-right: 30px;
+    padding-top: 35px;
+}
+.details .text{
+    margin: 0 0 10px;
+    font-size: 20px;
+    font-style: oblique;
+    font-family: monospace;
+}

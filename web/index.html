@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Unsupervised Video Summarization</title>
+        <link rel="stylesheet" href="style/main.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+        <script src="script/main.js"></script>
+    </head>
+
+    <body ng-app="mainApp" ng-controller="mainController">
+        <header>
+            <div class="text title col-xs-12 col-md-12 col-sm-12 col-lg-12"> Unsupervised Video Summarization</div>
+        </header>
+        <section class="main-section">
+            <div class="main-menu">
+                <div class="about-project col-xs-6 col-md-6 col-sm-6 col-lg-6 clickable" ng-click="showProject()">About the Project</div>
+                <div class="about-us col-xs-6 col-md-6 col-sm-6 col-lg-6 clickable" ng-click="showUs()">About Us</div>
+            </div>
+            <div class="content">
+                <div ng-if="project">
+                    <div class="sub-menu">
+                        <div class="col-xs-3 col-md-3 col-sm-3 col-lg-3 clickable" ng-click="showVideoSummarization()">Video Summarization</div>
+                        <div class="col-xs-3 col-md-3 col-sm-3 col-lg-3 clickable" ng-click="showImplementationDetails()">Implementation Details</div>
+                        <div class="col-xs-3 col-md-3 col-sm-3 col-lg-3 clickable" ng-click="showResults()">Results</div>
+                        <div class="col-xs-3 col-md-3 col-sm-3 col-lg-3 clickable" ng-click="showReferences()">References</div>
+                    </div>
+                    <div class="details">
+                        <div ng-if="videoSummarization">
+                            <div class="col-xs-8 col-md-8 col-sm-8 col-lg-8 text">
+                                <p>
+                                    Video summarization is the process of proiding a short trailer so that a viewer can get the 
+                                    gist without investing much time in watching the entire video. This is done by selecting the 
+                                    frames which collectively represent the video in a concise way. This service can be integrated
+                                    with online video browsing platforms so that it can be helpful for a viewer to select a video. 
+                                </p>
+                                <p>
+                                    There are several supervised approaches available for video summarization. They use human
+                                    generated summaries as labels. Also, reinforcement learning has been used by Song et al. 2016
+                                    to make use of keyframe-labels and category information of training videos to train their agent.
+                                    However human labels are subjected to opinions therefore these approaches may not guarantee an
+                                    unbiased summary.
+                                </p>
+                                <p>
+                                    Our solution is based on Zhou, K., & Qiao, Y. (2018) where a Deep Summmarization Network is used 
+                                    to summarize unlabelled videos. This appproach is completely unsupervised. On top of that we used 
+                                    augmentations and alternate reinforcement learning algorithm to evaluate any performance improvement. 
+                                </p>
+                                <a href="" target="_blank" class="link">Click here to summarize video</a>
+                            </div>
+                            <div class="col-xs-4 col-md-4 col-sm-4 col-lg-4 picture">
+                                <img class="image" src="resources/pic3.jpg" alt="llama picture"/>
+                            </div>
+                        </div>
+                        <div ng-if="implementationDetails">
+                            <div class="col-xs-8 col-md-8 col-sm-8 col-lg-8 text">
+                                <p>
+                                    The solution uses a Deep Summarization Network that consists of an Encoder and a Decoder to
+                                    select a frame for summarization based on predicted probabilities. And there is a reward 
+                                    function that evaluates the generated summary by determining how diverse the selected frames
+                                    are and how much they represent the entire video.   
+                                </p>
+                                <h3>Encoder</h3>>
+                                <p>
+                                    The encoder is a pretrained CNN used to extract features from the video frames. In this 
+                                    case we used ResNet50/ResNet101. 
+                                </p>
+                                <h3>Decoder</h3> 
+                                <p>
+                                    The decoder is a bidirectional RNN (we used LSTM) which accepts the extracted features and
+                                    predicts the probability distribution for a frame to be selected. This component is trainable.
+                                </p>  
+                                <h3>Reward Function</h3>
+                                <p>
+                                    The reward funtion calculates the diversity among the video frames and how representative are
+                                    the selected frames of the entire video. The diversity part aims for dissimilarities of the
+                                    frames in feature space although allowing similar features among frames which are temporaly
+                                    distant and the representative part encourages selection of frames that are closest to the 
+                                    centroids of clusters of feature space. 
+                                </p> 
+                                <p>
+                                    This reward is used for training the decoder using REINFORCE/PPO with the aim of maximizing
+                                    the rewards.
+                                </p>
+                            </div>
+                            <div class="col-xs-4 col-md-4 col-sm-4 col-lg-4 picture">
+                                <img class="image" src="resources/pic5.jpg" alt="llama picture"/>
+                            </div>
+                        </div>
+                        <div ng-if="results">
+                            <div class="col-xs-8 col-md-8 col-sm-8 col-lg-8 text">
+                                
+                            </div>
+                            <div class="col-xs-4 col-md-4 col-sm-4 col-lg-4 picture">
+                                <img class="image" src="resources/pic4.jpg" alt="llama picture"/>
+                            </div>
+                        </div>
+                        <div ng-if="references">
+                            <div class="col-xs-8 col-md-8 col-sm-8 col-lg-8 text">
+                                <h3>References:</h3>
+                                <ol>
+                                    <li>Zhou, K., & Qiao, Y. (2018). Deep Reinforcement Learning for Unsupervised Video Summarization
+                                         with Diversity-Representativeness Reward. ArXiv, abs/1801.00054.
+                                    </li>
+                                    <li>[Song et al. 2016] Song, X.; Chen, K.; Lei, J.; Sun, L.; Wang, Z.; Xie, L.; and Song, M. 2016.
+                                         Category driven deep recurrent neural network for video summarization. In ICMEW, 1–6. IEEE.
+                                    </li>
+                                </ol>
+                            </div>
+                            <div class="col-xs-4 col-md-4 col-sm-4 col-lg-4 picture">
+                                <img class="image" src="resources/pic1.jpg" alt="llama picture"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div ng-if="us">
+                    
+                    <div class="details">
+                        <div ng-if="ourInfo">
+                            <div class="col-xs-8 col-md-8 col-sm-8 col-lg-8 text">
+                                <p>
+                                    We are Computer Science graduate students at New York University. This project is a part of our
+                                    course on Deep Reinforcement Learning.
+                                </p>
+                                
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <footer></footer>
+    </body>
+
+</html>
