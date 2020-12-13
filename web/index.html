@@ -50,7 +50,7 @@
                                 <a href="" target="_blank" class="link">Click here to summarize video</a>
                             </div>
                             <div class="col-xs-4 col-md-4 col-sm-4 col-lg-4 picture">
-                                <img class="image" src="resources/pic3.jpg" alt="llama picture"/>
+                                <img class="image" src="resources/pic1.png" alt=" Video frames"/>
                             </div>
                         </div>
                         <div ng-if="implementationDetails">
@@ -61,7 +61,7 @@
                                     function that evaluates the generated summary by determining how diverse the selected frames
                                     are and how much they represent the entire video.   
                                 </p>
-                                <h3>Encoder</h3>>
+                                <h3>Encoder</h3>
                                 <p>
                                     The encoder is a pretrained CNN used to extract features from the video frames. In this 
                                     case we used ResNet50/ResNet101. 
@@ -85,15 +85,103 @@
                                 </p>
                             </div>
                             <div class="col-xs-4 col-md-4 col-sm-4 col-lg-4 picture">
-                                <img class="image" src="resources/pic5.jpg" alt="llama picture"/>
+                                <img class="image architecture" src="resources/pic2.png" alt=" Solution architecture"/>
                             </div>
                         </div>
                         <div ng-if="results">
                             <div class="col-xs-8 col-md-8 col-sm-8 col-lg-8 text">
-                                
+                                <h2>Results on TVSum dataset</h2>
+                                <table>
+                                    <tr>
+                                        <th>Encoder - Backbone CNN</th>
+                                        <th>Encoder - Backbone CNN</th>
+                                        <th>RL Algorithm</th>
+                                        <th>Trained with augmented data</th>
+                                        <th>F1 Score (mean ± std)</th>
+                                    </tr>
+                                    <tr>
+                                        <td>Resnet50</td>
+                                        <td>Bidirectional LSTM</td>
+                                        <td>REINFORCE</td>
+                                        <td>False</td>
+                                        <td>0.5700 ± 0.003</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Resnet50</td>
+                                        <td>Bidirectional LSTM</td>
+                                        <td>PPO</td>
+                                        <td>False</td>
+                                        <td>0.5736 ± 0.004</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Resnet50</td>
+                                        <td>Bidirectional LSTM</td>
+                                        <td>PPO</td>
+                                        <td>True</td>
+                                        <td>0.5756 ± 0.002</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Resnet101</td>
+                                        <td>Bidirectional LSTM</td>
+                                        <td>REINFORCE</td>
+                                        <td>False</td>
+                                        <td>0.5695 ± 0.004</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Resnet101</td>
+                                        <td>Bidirectional LSTM</td>
+                                        <td>PPO</td>
+                                        <td>False</td>
+                                        <td>0.5712 ± 0.004</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Resnet101</td>
+                                        <td>Bidirectional LSTM</td>
+                                        <td>PPO</td>
+                                        <td>True</td>
+                                        <td>0.5741 ± 0.003</td>
+                                    </tr>
+                                </table>
                             </div>
-                            <div class="col-xs-4 col-md-4 col-sm-4 col-lg-4 picture">
-                                <img class="image" src="resources/pic4.jpg" alt="llama picture"/>
+                            <div class="col-xs-8 col-md-8 col-sm-8 col-lg-8 text">
+                                <h2>Results on SumMe dataset</h2>
+                                <table>
+                                    <tr>
+                                        <th>Encoder - Backbone CNN</th>
+                                        <th>Encoder - Backbone CNN</th>
+                                        <th>RL Algorithm</th>
+                                        <th>Trained with augmented data</th>
+                                        <th>F1 Score</th>
+                                    </tr>
+                                    <tr>
+                                        <td>Resnet50</td>
+                                        <td>Bidirectional LSTM</td>
+                                        <td>PPO</td>
+                                        <td>False</td>
+                                        <td>0.1780</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Resnet50</td>
+                                        <td>Bidirectional LSTM</td>
+                                        <td>PPO</td>
+                                        <td>True</td>
+                                        <td>0.1887</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Resnet101</td>
+                                        <td>Bidirectional LSTM</td>
+                                        <td>PPO</td>
+                                        <td>False</td>
+                                        <td>0.1817</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Resnet101</td>
+                                        <td>Bidirectional LSTM</td>
+                                        <td>PPO</td>
+                                        <td>True</td>
+                                        <td>0.1830</td>
+                                    </tr>
+                                </table>
                             </div>
                         </div>
                         <div ng-if="references">
@@ -107,9 +195,6 @@
                                          Category driven deep recurrent neural network for video summarization. In ICMEW, 1–6. IEEE.
                                     </li>
                                 </ol>
-                            </div>
-                            <div class="col-xs-4 col-md-4 col-sm-4 col-lg-4 picture">
-                                <img class="image" src="resources/pic1.jpg" alt="llama picture"/>
                             </div>
                         </div>
                     </div>
