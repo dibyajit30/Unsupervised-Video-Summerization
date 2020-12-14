@@ -30,7 +30,7 @@
                         <div ng-if="videoSummarization">
                             <div class="col-xs-8 col-md-8 col-sm-8 col-lg-8 text">
                                 <p>
-                                    Video summarization is the process of proiding a short trailer so that a viewer can get the 
+                                    Video summarization is the process of providing a short trailer so that a viewer can get the 
                                     gist without investing much time in watching the entire video. This is done by selecting the 
                                     frames which collectively represent the video in a concise way. This service can be integrated
                                     with online video browsing platforms so that it can be helpful for a viewer to select a video. 
@@ -82,6 +82,31 @@
                                 <p>
                                     This reward is used for training the decoder using REINFORCE/PPO with the aim of maximizing
                                     the rewards.
+                                </p>
+                                <h3>Augmentation</h3>
+                                <p>
+                                    We use the following augmentation techniques on the videos:
+                                </p>
+                                <ol>
+                                    <li>GaussianBlur</li>
+                                    <li>Cutout</li>
+                                    <li>Cutout Color</li>
+                                    <li>Rotate</li>
+                                    <li>Flip</li>
+                                    <li>Center Crop</li>
+                                    <li>Grayscale</li>
+                                </ol>
+                                <p>
+                                    We ensure that these augmentations are applied uniformly along the temporal dimension, i.e. in 
+                                    the Cutout augmentation, we ensure that the same patch is blacked out in all frames of the video to 
+                                    ensure that the temporal information is not affected.
+                                </p>
+                                <h3>Dataset </h3>
+                                <p>
+                                    We train our model architectures on the TVSum dataset using the cross-validation method. Following Zhou et 
+                                    al., we perform 5 fold cross-validation and report our average out-of-fold F1 score. We also evaluate 
+                                    our model the SumMe dataset to test the generalization of our models. Note that SumMe is an 
+                                    out-of-distribution data and our model is not trained on this dataset.
                                 </p>
                             </div>
                             <div class="col-xs-4 col-md-4 col-sm-4 col-lg-4 picture">
@@ -183,6 +208,17 @@
                                     </tr>
                                 </table>
                             </div>
+                            <div class="col-xs-12 col-md-12 col-sm-12 col-lg-12 text">
+                                <h3>Discussion </h3>
+                                <p>
+                                    We train our models on 5 different seeds and report mean and standard deviation of the F1 score.
+                                    We were able to observe that augmentations improve the F1 score of our model on the TVSum and SumMe
+                                    dataset. We also observed that the PPO algorithm performs better than REINFORCE algorithm. The smaller
+                                    backbone, which is the Resnet50 performs better than the larger backbone, i.e.  Resnet101. The result 
+                                    of our model the SumMe dataset also improves with augmentations. Note that this score is not comparable 
+                                    to models which are trained on this dataset. 
+                                </p>
+                            </div>
                         </div>
                         <div ng-if="references">
                             <div class="col-xs-8 col-md-8 col-sm-8 col-lg-8 text">
@@ -193,6 +229,24 @@
                                     </li>
                                     <li>[Song et al. 2016] Song, X.; Chen, K.; Lei, J.; Sun, L.; Wang, Z.; Xie, L.; and Song, M. 2016.
                                          Category driven deep recurrent neural network for video summarization. In ICMEW, 1–6. IEEE.
+                                    </li>
+                                    <li>
+                                        [Song et al. 2015] Song, Y.; Vallmitjana, J.; Stent, A.; andJaimes, A. 2015. Tvsum: 
+                                        Summarizing web videos using titles. In CVPR, 5179–5187.
+                                    </li>
+                                    <li>
+                                        [Gygli et al. 2014] Gygli, M.; Grabner, H.; Riemenschneider, H.; and Van Gool, L. 2014. Creating 
+                                        summaries from user videos. In ECCV, 505–520. Springer.
+                                    </li>
+                                    <li>
+                                        [Williams 1992] Williams, R. J. 1992. Simple statistical gradient-following algorithms for 
+                                        connectionist reinforcement learning. Machine learning 8(3-4):229–256.
+                                    </li>
+                                    <li>
+                                        Schulman, J. et al.: Proximal Policy Optimization Algorithms. CoRR. abs/1707.06347, (2017).
+                                    </li>
+                                    <li>
+                                        He, K. et al.: Deep Residual Learning for Image Recognition. Presented at the (2015).
                                     </li>
                                 </ol>
                             </div>
